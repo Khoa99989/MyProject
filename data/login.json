@@ -7,15 +7,8 @@
     "description": "Should redirect to home after successful login (seeded demo user)"
   },
   {
-    "testCase": "Valid login with correct credentials",
-    "email": "admin@example.com",
-    "password": "SecurePass123!",
-    "expectedResult": "success",
-    "description": "Should redirect to home page after successful login"
-  },
-  {
     "testCase": "Invalid login with wrong password",
-    "email": "admin@example.com",
+    "email": "demo@fnb.com",
     "password": "WrongPassword",
     "expectedResult": "error",
     "description": "Should display error message for invalid credentials"
@@ -36,7 +29,7 @@
   },
   {
     "testCase": "Login with empty password field",
-    "email": "admin@example.com",
+    "email": "demo@fnb.com",
     "password": "",
     "expectedResult": "validation_error",
     "description": "Should show validation error for empty password"

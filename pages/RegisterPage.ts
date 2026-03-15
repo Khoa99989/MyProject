@@ -16,13 +16,16 @@ export class RegisterPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.nameInput = page.locator('[data-testid="name-input"], #name');
-    this.emailInput = page.locator('[data-testid="email-input"], #email');
-    this.passwordInput = page.locator('[data-testid="password-input"], #password');
-    this.confirmPasswordInput = page.locator('[data-testid="confirm-password-input"], #confirm-password');
-    this.submitButton = page.getByRole('button', { name: /create account/i }).or(page.locator('[data-testid="register-button"]'));
-    this.errorMessage = page.locator('[data-testid="error-message"], .alert-message.error');
-    this.loginLink = page.locator('[data-testid="login-link"], a[href*="#/login"]');
+    // Scope to the register form to avoid navbar conflicts
+    const form = page.locator('[data-testid="register-form"]');
+    this.nameInput = form.locator('[data-testid="name-input"]');
+    this.emailInput = form.locator('[data-testid="email-input"]');
+    this.passwordInput = form.locator('[data-testid="password-input"]');
+    this.confirmPasswordInput = form.locator('[data-testid="confirm-password-input"]');
+    this.submitButton = form.locator('[data-testid="register-button"]');
+    this.errorMessage = page.locator('[data-testid="error-message"]');
+    // Use data-testid only to avoid matching the navbar "Sign In" link
+    this.loginLink = page.locator('[data-testid="login-link"]');
   }
 
   // --------------- Actions ---------------

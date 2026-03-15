@@ -22,3 +22,8 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# Backend build artifacts
+backend/server
+backend/fnb.db
+*.db

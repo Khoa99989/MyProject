@@ -1,23 +1,9 @@
 [
   {
-    "role": "admin",
-    "name": "Admin User",
-    "email": "admin@example.com",
-    "password": "SecurePass123!",
-    "permissions": ["read", "write", "delete", "manage_users"]
-  },
-  {
-    "role": "manager",
-    "name": "Manager User",
-    "email": "manager@example.com",
-    "password": "ManagerPass456!",
-    "permissions": ["read", "write", "delete"]
-  },
-  {
-    "role": "viewer",
-    "name": "Viewer User",
-    "email": "viewer@example.com",
-    "password": "ViewerPass789!",
-    "permissions": ["read"]
+    "role": "demo",
+    "name": "Demo User",
+    "email": "demo@fnb.com",
+    "password": "password123",
+    "permissions": ["read", "write"]
   }
 ]

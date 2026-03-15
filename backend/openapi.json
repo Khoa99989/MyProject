@@ -35,9 +35,18 @@
           }
         },
         "responses": {
-          "201": { "description": "Đăng ký thành công", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } },
-          "400": { "description": "Dữ liệu không hợp lệ", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } },
-          "409": { "description": "Email đã tồn tại", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          "201": {
+            "description": "Đăng ký thành công",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } }
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "409": {
+            "description": "Email đã tồn tại",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
         }
       }
     },
@@ -61,9 +70,18 @@
           }
         },
         "responses": {
-          "200": { "description": "Đăng nhập thành công", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } },
-          "400": { "description": "Dữ liệu không hợp lệ", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } },
-          "401": { "description": "Sai email hoặc mật khẩu", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          "200": {
+            "description": "Đăng nhập thành công",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } }
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "401": {
+            "description": "Sai email hoặc mật khẩu",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
         }
       }
     },
@@ -73,8 +91,14 @@
         "summary": "Lấy thông tin user (cần đăng nhập)",
         "security": [{ "BearerAuth": [] }],
         "responses": {
-          "200": { "description": "Thành công", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserResponse" } } },
-          "401": { "description": "Chưa đăng nhập hoặc token hết hạn", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          "200": {
+            "description": "Thành công",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserResponse" } } }
+          },
+          "401": {
+            "description": "Chưa đăng nhập hoặc token hết hạn",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
         }
       }
     },
@@ -114,7 +138,10 @@
         "tags": ["Products"],
         "summary": "Sản phẩm nổi bật (top rating)",
         "responses": {
-          "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } } } }
+          "200": {
+            "description": "OK",
+            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } } } }
+          }
         }
       }
     },
@@ -124,8 +151,14 @@
         "summary": "Chi tiết sản phẩm",
         "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
         "responses": {
-          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } },
-          "404": { "description": "Không tìm thấy", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          "200": {
+            "description": "OK",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } }
+          },
+          "404": {
+            "description": "Không tìm thấy",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
         }
       }
     },
@@ -134,7 +167,10 @@
         "tags": ["Products"],
         "summary": "Danh sách danh mục",
         "responses": {
-          "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Category" } } } }
+          "200": {
+            "description": "OK",
+            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Category" } } } }
+          }
         }
       }
     },
@@ -159,7 +195,10 @@
               }
             }
           },
-          "401": { "description": "Chưa đăng nhập", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          "401": {
+            "description": "Chưa đăng nhập",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
         }
       },
       "post": {
@@ -182,10 +221,32 @@
           }
         },
         "responses": {
-          "201": { "description": "Đã thêm vào giỏ", "content": { "application/json": { "schema": { "type": "object", "properties": { "message": { "type": "string" }, "item": { "$ref": "#/components/schemas/CartItem" } } } } },
-          "400": { "description": "Dữ liệu không hợp lệ / Hết hàng", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } },
-          "401": { "description": "Chưa đăng nhập", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } },
-          "404": { "description": "Sản phẩm không tồn tại", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          "201": {
+            "description": "Đã thêm vào giỏ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "item": { "$ref": "#/components/schemas/CartItem" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ / Hết hàng",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "401": {
+            "description": "Chưa đăng nhập",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "404": {
+            "description": "Sản phẩm không tồn tại",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
         }
       },
       "delete": {
@@ -194,7 +255,10 @@
         "security": [{ "BearerAuth": [] }],
         "responses": {
           "200": { "description": "Đã xóa giỏ hàng" },
-          "401": { "description": "Chưa đăng nhập", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          "401": {
+            "description": "Chưa đăng nhập",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
         }
       }
     },
@@ -239,7 +303,22 @@
       "get": {
         "tags": ["System"],
         "summary": "Health check",
-        "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string" }, "service": { "type": "string" } } } } } }
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "service": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   },

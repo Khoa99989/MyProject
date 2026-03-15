@@ -29,6 +29,7 @@ test.describe('Login Page Tests', () => {
       // Assert based on expected result
       switch (data.expectedResult) {
         case 'success':
+          // Wait for successful login — logout button should appear after reload
           await loginPage.waitForLoginSuccess();
           expect(loginPage.isLoggedIn()).toBe(true);
           logger.stepDone('Login successful — redirected away from login');
@@ -42,6 +43,8 @@ test.describe('Login Page Tests', () => {
           break;
 
         case 'validation_error':
+          // Form has HTML5 validation — user stays on login page, no error from server
+          await loginPage.page.waitForTimeout(500);
           await expect(loginPage.page).toHaveURL(/#\/login/);
           logger.stepDone('Validation error — user still on login page');
           break;

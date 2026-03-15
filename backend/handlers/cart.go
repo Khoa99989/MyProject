@@ -79,8 +79,13 @@ func (h *CartHandler) AddToCart(c *gin.Context) {
 	}
 
 	// Create new cart item
+	uid, ok := userID.(uint)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user session"})
+		return
+	}
 	item := models.CartItem{
-		UserID:    userID.(uint),
+		UserID:    uid,
 		ProductID: req.ProductID,
 		Quantity:  req.Quantity,
 	}

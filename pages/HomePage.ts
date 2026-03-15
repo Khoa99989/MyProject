@@ -7,20 +7,14 @@ import { BasePage } from './BasePage';
 export class HomePage extends BasePage {
   // --------------- Locators ---------------
   readonly navBar: Locator;
-  readonly userMenu: Locator;
   readonly userNameDisplay: Locator;
   readonly logoutButton: Locator;
-  readonly searchInput: Locator;
-  readonly notificationBell: Locator;
 
   constructor(page: Page) {
     super(page);
-    this.navBar = page.locator('#navbar, nav.navbar, .navbar');
-    this.userMenu = page.locator('.navbar-actions').first();
+    this.navBar = page.locator('#navbar');
     this.userNameDisplay = page.locator('.navbar-actions span').filter({ hasText: /Hi,/ });
-    this.logoutButton = page.locator('[data-testid="logout-button"], button:has-text("Logout")');
-    this.searchInput = page.locator('[data-testid="search-input"], input[type="search"]');
-    this.notificationBell = page.locator('[data-testid="notifications"], .notification-bell');
+    this.logoutButton = page.locator('[data-testid="logout-button"]');
   }
 
   // --------------- Actions ---------------
@@ -35,14 +29,16 @@ export class HomePage extends BasePage {
     return this.getText(this.userNameDisplay);
   }
 
-  /** Click logout (navbar shows Logout button when logged in) */
+  /** Click logout and wait for page to reload */
   async logout(): Promise<void> {
     await this.clickElement(this.logoutButton);
+    // Logout triggers location.reload(), wait for it
+    await this.page.waitForLoadState('load');
   }
 
   /** Navigate to a section via the nav bar (e.g. "Home", "Menu") */
   async navigateToSection(sectionName: string): Promise<void> {
-    const link = this.page.getByRole('link', { name: new RegExp(sectionName, 'i') }).first();
+    const link = this.page.locator('.navbar-nav').getByRole('link', { name: new RegExp(sectionName, 'i') });
     await this.clickElement(link);
     await this.waitForPageLoad();
   }
@@ -50,16 +46,5 @@ export class HomePage extends BasePage {
   /** Check if the navbar is visible (page is loaded) */
   async isNavBarVisible(): Promise<boolean> {
     return this.isVisible(this.navBar);
-  }
-
-  /** Search for a term */
-  async search(term: string): Promise<void> {
-    await this.fillInput(this.searchInput, term);
-    await this.searchInput.press('Enter');
-  }
-
-  /** Click notification bell */
-  async openNotifications(): Promise<void> {
-    await this.clickElement(this.notificationBell);
   }
 }

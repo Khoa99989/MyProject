@@ -17,21 +17,16 @@ test.describe('Home Page Tests', () => {
     await expect(homePage.navBar).toBeVisible();
   });
 
-  test('should display logout button when logged in', async ({ homePage, loginPage }) => {
-    await loginPage.goto();
-    await loginPage.login('demo@fnb.com', 'password123');
-    await loginPage.waitForLoginSuccess();
-    await homePage.goto();
-    await expect(homePage.logoutButton).toBeVisible();
+  test('should display logout button when logged in', async ({ loginPage, homePage }) => {
+    // loginViaApi sets localStorage + navigates to home + reloads
+    await loginPage.loginViaApi();
+    await expect(homePage.logoutButton).toBeVisible({ timeout: 10000 });
   });
 
-  test('should display the user name when logged in', async ({ homePage, loginPage }) => {
-    await loginPage.goto();
-    await loginPage.login('demo@fnb.com', 'password123');
-    await loginPage.waitForLoginSuccess();
-    await homePage.goto();
+  test('should display the user name when logged in', async ({ loginPage, homePage }) => {
+    await loginPage.loginViaApi();
     const userName = await homePage.getUserName();
-    expect(userName).toBeTruthy();
+    expect(userName).toContain('Hi,');
   });
 
   test('should be able to navigate to Menu via navbar', async ({ homePage, logger }) => {
@@ -46,15 +41,13 @@ test.describe('Home Page Tests', () => {
     await expect(homePage.page.locator('[data-testid="explore-menu-btn"]')).toBeVisible();
   });
 
-  test('should be able to logout', async ({ homePage, loginPage, logger }) => {
+  test('should be able to logout', async ({ loginPage, homePage, logger }) => {
     logger.step('Testing logout flow');
-    await loginPage.goto();
-    await loginPage.login('demo@fnb.com', 'password123');
-    await loginPage.waitForLoginSuccess();
-    await homePage.goto();
+    await loginPage.loginViaApi();
+    await expect(homePage.logoutButton).toBeVisible({ timeout: 10000 });
     await homePage.logout();
-    await homePage.page.waitForURL(/#\/login|#\/$/);
-    await expect(homePage.page).toHaveURL(/#\/login|#\/$/);
-    logger.stepDone('Logout successful — redirected to login or home');
+    // After reload, should see Sign In button instead of Logout
+    await expect(homePage.page.locator('[data-testid="login-button"]')).toBeVisible({ timeout: 10000 });
+    logger.stepDone('Logout successful — Sign In button visible again');
   });
 });

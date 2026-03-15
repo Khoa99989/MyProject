@@ -2,14 +2,21 @@ package middleware
 
 import (
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// JWTSecret is the secret key for signing JWT tokens
-var JWTSecret = []byte("fnb-secret-key-change-in-production")
+// JWTSecret is the secret key for signing JWT tokens.
+// In production, set the JWT_SECRET environment variable.
+var JWTSecret = func() []byte {
+	if secret := os.Getenv("JWT_SECRET"); secret != "" {
+		return []byte(secret)
+	}
+	return []byte("fnb-secret-key-dev-only")
+}()
 
 // AuthMiddleware validates the JWT token in the Authorization header
 func AuthMiddleware() gin.HandlerFunc {

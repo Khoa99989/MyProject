@@ -24,7 +24,7 @@ test.describe('Registration Page Tests', () => {
   test('should have link to login page', async ({ registerPage }) => {
     await expect(registerPage.loginLink).toBeVisible();
     await registerPage.goToLogin();
-    await registerPage.page.waitForURL(/#\/login/);
+    await registerPage.page.waitForLoadState('load');
     await expect(registerPage.page).toHaveURL(/#\/login/);
   });
 
@@ -32,7 +32,13 @@ test.describe('Registration Page Tests', () => {
     const uniqueEmail = `testuser_${Date.now()}@example.com`;
     await registerPage.register('Test User', uniqueEmail, 'password123');
 
-    await registerPage.page.waitForURL((url) => !url.href.includes('#/register'), { timeout: 15000 });
+    // Register triggers location.reload() after success. Wait for the
+    // page to reload and show the logout button (= user is authenticated).
+    await registerPage.page.locator('[data-testid="logout-button"]').waitFor({
+      state: 'visible',
+      timeout: 15000,
+    });
+    // After reload, user should be on the home page
     await expect(registerPage.page).not.toHaveURL(/#\/register/);
   });
 });

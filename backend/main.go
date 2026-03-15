@@ -49,14 +49,16 @@ func main() {
 	}
 
 	// Auto-migrate models
-	db.AutoMigrate(
+	if err := db.AutoMigrate(
 		&models.User{},
 		&models.Category{},
 		&models.Product{},
 		&models.CartItem{},
 		&models.Order{},
 		&models.OrderItem{},
-	)
+	); err != nil {
+		log.Fatal("Failed to auto-migrate database:", err)
+	}
 
 	// Seed demo data
 	seed.SeedDatabase(db)
@@ -70,7 +72,7 @@ func main() {
 	r := gin.Default()
 
 	// CORS — allow frontend origin (local + ALLOWED_ORIGINS khi deploy)
-	origins := []string{"http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"}
+	origins := []string{"http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:5174"}
 	if o := os.Getenv("ALLOWED_ORIGINS"); o != "" {
 		for _, s := range strings.Split(o, ",") {
 			if s = strings.TrimSpace(s); s != "" {
@@ -88,18 +90,24 @@ func main() {
 
 	// --- Swagger / OpenAPI ---
 	r.GET("/openapi.json", func(c *gin.Context) {
-		data, _ := fs.ReadFile(swaggerFS, "openapi.json")
+		data, err := fs.ReadFile(swaggerFS, "openapi.json")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load OpenAPI spec"})
+			return
+		}
 		c.Header("Content-Type", "application/json")
 		c.Data(http.StatusOK, "application/json", data)
 	})
-	r.GET("/swagger", func(c *gin.Context) {
-		data, _ := fs.ReadFile(swaggerFS, "swagger.html")
+	serveSwagger := func(c *gin.Context) {
+		data, err := fs.ReadFile(swaggerFS, "swagger.html")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load Swagger UI"})
+			return
+		}
 		c.Data(http.StatusOK, "text/html; charset=utf-8", data)
-	})
-	r.GET("/swagger/", func(c *gin.Context) {
-		data, _ := fs.ReadFile(swaggerFS, "swagger.html")
-		c.Data(http.StatusOK, "text/html; charset=utf-8", data)
-	})
+	}
+	r.GET("/swagger", serveSwagger)
+	r.GET("/swagger/", serveSwagger)
 
 	// --- Public Routes ---
 	api := r.Group("/api")

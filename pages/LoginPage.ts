@@ -10,19 +10,17 @@ export class LoginPage extends BasePage {
   readonly passwordInput: Locator;
   readonly submitButton: Locator;
   readonly errorMessage: Locator;
-  readonly forgotPasswordLink: Locator;
   readonly registerLink: Locator;
-  readonly rememberMeCheckbox: Locator;
 
   constructor(page: Page) {
     super(page);
-    this.emailInput = page.getByRole('textbox', { name: /email/i }).or(page.locator('[data-testid="email-input"], #email'));
-    this.passwordInput = page.locator('[data-testid="password-input"], #password, input[type="password"]');
-    this.submitButton = page.getByRole('button', { name: /sign in/i }).or(page.locator('[data-testid="login-button"]'));
-    this.errorMessage = page.locator('[data-testid="error-message"], .alert-message.error, .error-message');
-    this.forgotPasswordLink = page.locator('a:has-text("Forgot")');
-    this.registerLink = page.locator('[data-testid="register-link"], a[href*="register"]');
-    this.rememberMeCheckbox = page.locator('[data-testid="remember-me"], #remember-me');
+    // Scope locators to the login form to avoid navbar conflicts
+    const form = page.locator('[data-testid="login-form"]');
+    this.emailInput = form.locator('[data-testid="email-input"]');
+    this.passwordInput = form.locator('[data-testid="password-input"]');
+    this.submitButton = form.locator('[data-testid="login-button"]');
+    this.errorMessage = page.locator('[data-testid="error-message"]');
+    this.registerLink = page.locator('[data-testid="register-link"]');
   }
 
   // --------------- Actions ---------------
@@ -32,7 +30,7 @@ export class LoginPage extends BasePage {
     await this.navigate('/#/login');
   }
 
-  /** Perform a full login flow */
+  /** Fill and submit the login form (UI flow) */
   async login(email: string, password: string): Promise<void> {
     await this.fillInput(this.emailInput, email);
     await this.fillInput(this.passwordInput, password);
@@ -54,18 +52,49 @@ export class LoginPage extends BasePage {
     return !this.getCurrentUrl().includes('#/login');
   }
 
-  /** Wait for successful login (redirect away from login page) */
+  /**
+   * Login via API and set localStorage tokens directly.
+   * This is the most reliable way to authenticate for tests that need
+   * login as a precondition. Bypasses the UI login form entirely.
+   */
+  async loginViaApi(email: string = 'demo@fnb.com', password: string = 'password123'): Promise<void> {
+    // Ensure page is on a real URL (localStorage not accessible on about:blank)
+    if (this.page.url() === 'about:blank') {
+      await this.page.goto('/');
+      await this.page.waitForLoadState('load');
+    }
+
+    // Call the login API directly
+    const response = await this.page.request.post('http://localhost:8080/api/login', {
+      data: { email, password },
+    });
+
+    if (!response.ok()) {
+      throw new Error(`API login failed: ${response.status()} ${response.statusText()}`);
+    }
+
+    const data = await response.json();
+
+    // Set localStorage tokens the same way the frontend does
+    await this.page.evaluate((loginData) => {
+      localStorage.setItem('fnb_token', loginData.token);
+      localStorage.setItem('fnb_user', JSON.stringify(loginData.user));
+    }, data);
+
+    // Reload so the SPA reads the new localStorage state
+    // and re-renders the navbar with the authenticated UI (logout button, user name)
+    await this.page.reload();
+    await this.page.waitForLoadState('load');
+  }
+
+  /** Wait for successful login via UI (page reload flow) */
   async waitForLoginSuccess(options?: { timeout?: number }): Promise<void> {
-    await this.page.waitForURL((url) => !url.href.includes('#/login'), { timeout: options?.timeout ?? 15000 });
-  }
-
-  /** Click forgot password link */
-  async clickForgotPassword(): Promise<void> {
-    await this.clickElement(this.forgotPasswordLink);
-  }
-
-  /** Toggle remember me checkbox */
-  async toggleRememberMe(): Promise<void> {
-    await this.rememberMeCheckbox.check();
+    const timeout = options?.timeout ?? 15000;
+    // Frontend does: window.location.hash = '#/'; window.location.reload();
+    // Wait for navbar to show logout button (means user is authenticated and page reloaded)
+    await this.page.locator('[data-testid="logout-button"]').waitFor({
+      state: 'visible',
+      timeout,
+    });
   }
 }
