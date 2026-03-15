@@ -1,0 +1,32 @@
+[
+  {
+    "testCase": "Search for existing product",
+    "searchTerm": "Espresso",
+    "expectedMinResults": 1
+  },
+  {
+    "testCase": "Search for non-existing product",
+    "searchTerm": "xyznonexistent",
+    "expectedMinResults": 0
+  },
+  {
+    "testCase": "Filter by Coffee category",
+    "categoryId": 1,
+    "expectedMinResults": 1
+  },
+  {
+    "testCase": "Filter by Tea category",
+    "categoryId": 2,
+    "expectedMinResults": 1
+  },
+  {
+    "testCase": "Filter by Juice category",
+    "categoryId": 3,
+    "expectedMinResults": 1
+  },
+  {
+    "testCase": "Filter by Bakery category",
+    "categoryId": 4,
+    "expectedMinResults": 1
+  }
+]

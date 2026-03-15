@@ -1,0 +1,16 @@
+# Render Blueprint — deploy Backend Go
+# Sau khi push repo lên GitHub/GitLab: Render → New → Blueprint → chọn repo
+services:
+  - type: web
+    name: fnb-backend
+    runtime: go
+    rootDir: backend
+    buildCommand: go build -o server .
+    startCommand: ./server
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+        # Điền connection string Supabase trong Render Dashboard → Environment
+      - key: ALLOWED_ORIGINS
+        sync: false
+        # Sau khi có URL Vercel/Netlify, thêm vào đây (vd: https://xxx.vercel.app)

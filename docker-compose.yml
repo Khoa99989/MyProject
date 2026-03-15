@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # Go Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Vite Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # Playwright E2E Tests
+  playwright:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - BASE_URL=http://frontend:5173
+      - API_URL=http://backend:8080
+      - CI=true
+      - HEADLESS=true
+    depends_on:
+      - frontend
+      - backend
+    volumes:
+      - ./test-results:/app/test-results

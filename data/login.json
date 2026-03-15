@@ -1,0 +1,51 @@
+[
+  {
+    "testCase": "Valid login with demo account",
+    "email": "demo@fnb.com",
+    "password": "password123",
+    "expectedResult": "success",
+    "description": "Should redirect to home after successful login (seeded demo user)"
+  },
+  {
+    "testCase": "Valid login with correct credentials",
+    "email": "admin@example.com",
+    "password": "SecurePass123!",
+    "expectedResult": "success",
+    "description": "Should redirect to home page after successful login"
+  },
+  {
+    "testCase": "Invalid login with wrong password",
+    "email": "admin@example.com",
+    "password": "WrongPassword",
+    "expectedResult": "error",
+    "description": "Should display error message for invalid credentials"
+  },
+  {
+    "testCase": "Invalid login with non-existent email",
+    "email": "nonexistent@example.com",
+    "password": "SomePassword123",
+    "expectedResult": "error",
+    "description": "Should display error message for non-existent user"
+  },
+  {
+    "testCase": "Login with empty email field",
+    "email": "",
+    "password": "SomePassword123",
+    "expectedResult": "validation_error",
+    "description": "Should show validation error for empty email"
+  },
+  {
+    "testCase": "Login with empty password field",
+    "email": "admin@example.com",
+    "password": "",
+    "expectedResult": "validation_error",
+    "description": "Should show validation error for empty password"
+  },
+  {
+    "testCase": "Login with both fields empty",
+    "email": "",
+    "password": "",
+    "expectedResult": "validation_error",
+    "description": "Should show validation errors for both empty fields"
+  }
+]
