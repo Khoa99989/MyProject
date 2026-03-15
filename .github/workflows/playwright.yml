@@ -1,19 +1,29 @@
 # -------------------------------------------------------
 # GitHub Actions CI/CD — Playwright Tests
 # -------------------------------------------------------
+# Tests require both backend and frontend to be running.
+# Options:
+#   1. Manual trigger via workflow_dispatch (set BASE_URL + API_URL)
+#   2. Auto-trigger on push (uses docker-compose to start services)
+# -------------------------------------------------------
 
 name: Playwright Tests
 
 on:
+  # Auto-run on push to main/develop
   push:
     branches: [main, develop]
   pull_request:
     branches: [main]
+  # Manual trigger with custom URLs
   workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Frontend URL (e.g. https://your-app.vercel.app)'
+        required: false
+        default: 'http://localhost:5173'
 
 env:
-  BASE_URL: ${{ vars.BASE_URL || 'https://staging.example.com' }}
-  API_URL: ${{ vars.API_URL || 'https://api.staging.example.com' }}
   CI: true
 
 jobs:
@@ -27,26 +37,80 @@ jobs:
       matrix:
         shard: [1/3, 2/3, 3/3]
 
-    container:
-      image: mcr.microsoft.com/playwright:v1.57.0-noble
+    services:
+      # Start PostgreSQL for the backend
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: fnb_user
+          POSTGRES_PASSWORD: fnb_pass
+          POSTGRES_DB: fnb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Cache node_modules
-        uses: actions/cache@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          go-version: '1.21'
+
+      - name: Build and start backend
+        working-directory: backend
+        run: |
+          go build -o server .
+          ./server &
+          # Wait for backend to be ready
+          for i in {1..30}; do
+            if curl -s http://localhost:8080/health > /dev/null 2>&1; then
+              echo "✅ Backend is ready"
+              break
+            fi
+            echo "⏳ Waiting for backend... ($i/30)"
+            sleep 1
+          done
+        env:
+          DATABASE_URL: postgresql://fnb_user:fnb_pass@localhost:5432/fnb?sslmode=disable
+          JWT_SECRET: ci-test-secret-key-for-github-actions
+          GIN_MODE: release
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Start frontend dev server
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run dev -- --host 0.0.0.0 &
+          # Wait for frontend to be ready
+          for i in {1..30}; do
+            if curl -s http://localhost:5173 > /dev/null 2>&1; then
+              echo "✅ Frontend is ready"
+              break
+            fi
+            echo "⏳ Waiting for frontend... ($i/30)"
+            sleep 1
+          done
+
       - name: Run Playwright tests (shard ${{ matrix.shard }})
-        run: npx playwright test --shard=${{ matrix.shard }}
+        run: npx playwright test --project=chromium --shard=${{ matrix.shard }}
+        env:
+          BASE_URL: ${{ github.event.inputs.base_url || 'http://localhost:5173' }}
 
       - name: Upload HTML Report
         uses: actions/upload-artifact@v4
@@ -74,6 +138,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
       - name: Install dependencies
         run: npm ci
