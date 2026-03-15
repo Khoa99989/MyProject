@@ -1,16 +1,29 @@
-# Render Blueprint — deploy Backend Go
-# Sau khi push repo lên GitHub/GitLab: Render → New → Blueprint → chọn repo
+# Render Blueprint — one-click deploy backend + database
+# Docs: https://render.com/docs/blueprint-spec
+# Usage: Render Dashboard → New → Blueprint → chọn repo GitHub
+
+databases:
+  - name: fnb-db
+    plan: free
+    databaseName: fnb
+    user: fnb_user
+
 services:
   - type: web
     name: fnb-backend
-    runtime: go
-    rootDir: backend
-    buildCommand: go build -o server .
-    startCommand: ./server
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
-        sync: false
-        # Điền connection string Supabase trong Render Dashboard → Environment
+        fromDatabase:
+          name: fnb-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
       - key: ALLOWED_ORIGINS
-        sync: false
-        # Sau khi có URL Vercel/Netlify, thêm vào đây (vd: https://xxx.vercel.app)
+        value: https://frontend-dotzun8kb-khoa99989s-projects.vercel.app
+      - key: GIN_MODE
+        value: release

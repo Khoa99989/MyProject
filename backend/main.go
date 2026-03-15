@@ -71,8 +71,12 @@ func main() {
 	// --- Router ---
 	r := gin.Default()
 
-	// CORS — allow frontend origin (local + ALLOWED_ORIGINS khi deploy)
-	origins := []string{"http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:5174"}
+	// CORS — allow frontend origin (local + production + ALLOWED_ORIGINS khi deploy)
+	origins := []string{
+		"http://localhost:5173", "http://localhost:5174", "http://localhost:5175",
+		"http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:5174",
+		"https://frontend-dotzun8kb-khoa99989s-projects.vercel.app",
+	}
 	if o := os.Getenv("ALLOWED_ORIGINS"); o != "" {
 		for _, s := range strings.Split(o, ",") {
 			if s = strings.TrimSpace(s); s != "" {
