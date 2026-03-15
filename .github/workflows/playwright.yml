@@ -1,21 +1,16 @@
 # -------------------------------------------------------
 # GitHub Actions CI/CD — Playwright Tests
 # -------------------------------------------------------
-# Tests require both backend and frontend to be running.
-# Options:
-#   1. Manual trigger via workflow_dispatch (set BASE_URL + API_URL)
-#   2. Auto-trigger on push (uses docker-compose to start services)
+# Full-stack CI: PostgreSQL + Go backend + Vite frontend + Playwright tests
 # -------------------------------------------------------
 
 name: Playwright Tests
 
 on:
-  # Auto-run on push to main/develop
   push:
     branches: [main, develop]
   pull_request:
     branches: [main]
-  # Manual trigger with custom URLs
   workflow_dispatch:
     inputs:
       base_url:
@@ -38,7 +33,6 @@ jobs:
         shard: [1/3, 2/3, 3/3]
 
     services:
-      # Start PostgreSQL for the backend
       postgres:
         image: postgres:15
         env:
@@ -62,19 +56,23 @@ jobs:
         with:
           go-version: '1.21'
 
+      # SQLite driver requires CGO + gcc
+      - name: Install C compiler for CGO
+        run: sudo apt-get update && sudo apt-get install -y gcc
+
       - name: Build and start backend
         working-directory: backend
         run: |
-          go build -o server .
+          CGO_ENABLED=1 go build -o server .
           ./server &
           # Wait for backend to be ready
-          for i in {1..30}; do
+          for i in $(seq 1 30); do
             if curl -s http://localhost:8080/health > /dev/null 2>&1; then
               echo "✅ Backend is ready"
               break
             fi
             echo "⏳ Waiting for backend... ($i/30)"
-            sleep 1
+            sleep 2
           done
         env:
           DATABASE_URL: postgresql://fnb_user:fnb_pass@localhost:5432/fnb?sslmode=disable
@@ -84,9 +82,9 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
-      - name: Install dependencies
+      - name: Install root dependencies
         run: npm ci
 
       - name: Install Playwright browsers
@@ -98,13 +96,13 @@ jobs:
           npm ci
           npm run dev -- --host 0.0.0.0 &
           # Wait for frontend to be ready
-          for i in {1..30}; do
+          for i in $(seq 1 30); do
             if curl -s http://localhost:5173 > /dev/null 2>&1; then
               echo "✅ Frontend is ready"
               break
             fi
             echo "⏳ Waiting for frontend... ($i/30)"
-            sleep 1
+            sleep 2
           done
 
       - name: Run Playwright tests (shard ${{ matrix.shard }})
@@ -142,7 +140,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install dependencies
         run: npm ci
