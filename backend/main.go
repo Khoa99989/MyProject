@@ -71,21 +71,37 @@ func main() {
 	// --- Router ---
 	r := gin.Default()
 
-	// CORS — allow frontend origin (local + production + ALLOWED_ORIGINS khi deploy)
-	origins := []string{
-		"http://localhost:5173", "http://localhost:5174", "http://localhost:5175",
-		"http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:5174",
-		"https://frontend-dotzun8kb-khoa99989s-projects.vercel.app",
+	// CORS — allow frontend origins dynamically
+	// Vercel generates unique URLs per deployment (e.g. frontend-xxx-yyy.vercel.app)
+	// so we use AllowOriginFunc to match any *.vercel.app subdomain
+	localOrigins := map[string]bool{
+		"http://localhost:5173":  true,
+		"http://localhost:5174":  true,
+		"http://localhost:5175":  true,
+		"http://localhost:3000":  true,
+		"http://127.0.0.1:5173": true,
+		"http://127.0.0.1:5174": true,
 	}
+	// Add custom ALLOWED_ORIGINS from env
 	if o := os.Getenv("ALLOWED_ORIGINS"); o != "" {
 		for _, s := range strings.Split(o, ",") {
 			if s = strings.TrimSpace(s); s != "" {
-				origins = append(origins, s)
+				localOrigins[s] = true
 			}
 		}
 	}
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     origins,
+		AllowOriginFunc: func(origin string) bool {
+			// Allow all localhost origins
+			if localOrigins[origin] {
+				return true
+			}
+			// Allow any *.vercel.app subdomain
+			if strings.HasSuffix(origin, ".vercel.app") {
+				return true
+			}
+			return false
+		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
