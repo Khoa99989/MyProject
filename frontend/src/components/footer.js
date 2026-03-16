@@ -1,6 +1,8 @@
 /**
  * Footer component
  */
+import { t } from '../i18n.js';
+
 export function renderFooter() {
   return `
     <footer class="footer">
@@ -8,10 +10,10 @@ export function renderFooter() {
         <div class="footer-grid">
           <div class="footer-brand">
             <h3>☕ <span>Brew</span>ly</h3>
-            <p>Premium food & beverages crafted with passion. From artisan coffee to freshly baked goods — we deliver quality to your door.</p>
+            <p>${t('footer.brand')}</p>
           </div>
           <div class="footer-col">
-            <h4>Menu</h4>
+            <h4>${t('footer.menu')}</h4>
             <ul>
               <li><a href="#/products?category=1">Coffee</a></li>
               <li><a href="#/products?category=2">Tea</a></li>
@@ -20,24 +22,24 @@ export function renderFooter() {
             </ul>
           </div>
           <div class="footer-col">
-            <h4>Company</h4>
+            <h4>${t('footer.company')}</h4>
             <ul>
-              <li><a href="#/">About Us</a></li>
-              <li><a href="#/">Careers</a></li>
-              <li><a href="#/">Contact</a></li>
+              <li><a href="#/">${t('footer.aboutUs')}</a></li>
+              <li><a href="#/">${t('footer.careers')}</a></li>
+              <li><a href="#/">${t('footer.contact')}</a></li>
             </ul>
           </div>
           <div class="footer-col">
-            <h4>Support</h4>
+            <h4>${t('footer.support')}</h4>
             <ul>
-              <li><a href="#/">FAQ</a></li>
-              <li><a href="#/">Shipping</a></li>
-              <li><a href="#/">Returns</a></li>
+              <li><a href="#/">${t('footer.faq')}</a></li>
+              <li><a href="#/">${t('footer.shipping')}</a></li>
+              <li><a href="#/">${t('footer.returns')}</a></li>
             </ul>
           </div>
         </div>
         <div class="footer-bottom">
-          &copy; ${new Date().getFullYear()} Brewly. All rights reserved.
+          &copy; ${new Date().getFullYear()} ${t('footer.copyright')}
         </div>
       </div>
     </footer>

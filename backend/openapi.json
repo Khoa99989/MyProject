@@ -11,7 +11,9 @@
   "tags": [
     { "name": "Auth", "description": "Đăng ký, đăng nhập" },
     { "name": "Products", "description": "Sản phẩm và danh mục" },
-    { "name": "Cart", "description": "Giỏ hàng (cần Bearer token)" }
+    { "name": "Cart", "description": "Giỏ hàng (cần Bearer token)" },
+    { "name": "Language", "description": "Đa ngôn ngữ (i18n) — EN / VI" },
+    { "name": "Email", "description": "Gửi email (cần Bearer token)" }
   ],
   "paths": {
     "/api/register": {
@@ -28,7 +30,8 @@
                 "properties": {
                   "name": { "type": "string", "minLength": 2 },
                   "email": { "type": "string", "format": "email" },
-                  "password": { "type": "string", "minLength": 6 }
+                  "password": { "type": "string", "minLength": 6 },
+                  "lang": { "type": "string", "enum": ["en", "vi"], "default": "en", "description": "Ngôn ngữ cho welcome email" }
                 }
               }
             }
@@ -36,7 +39,7 @@
         },
         "responses": {
           "201": {
-            "description": "Đăng ký thành công",
+            "description": "Đăng ký thành công — welcome email được gửi tới user",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } }
           },
           "400": {
@@ -320,6 +323,156 @@
           }
         }
       }
+    },
+    "/api/languages": {
+      "get": {
+        "tags": ["Language"],
+        "summary": "Danh sách ngôn ngữ hỗ trợ",
+        "description": "Trả về danh sách các ngôn ngữ được hỗ trợ (code + tên)",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SupportedLanguage" }
+                },
+                "example": [
+                  { "code": "en", "name": "English" },
+                  { "code": "vi", "name": "Tiếng Việt" }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/languages/all": {
+      "get": {
+        "tags": ["Language"],
+        "summary": "Tất cả bản dịch cho mọi ngôn ngữ",
+        "description": "Trả về toàn bộ bản dịch (EN + VI) trong một request, tiện cho front-end cache",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "languages": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/SupportedLanguage" }
+                    },
+                    "translations": {
+                      "type": "object",
+                      "description": "Map lang_code → { key: value }",
+                      "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/languages/{lang}": {
+      "get": {
+        "tags": ["Language"],
+        "summary": "Bản dịch theo ngôn ngữ",
+        "description": "Trả về tất cả keys dịch cho một ngôn ngữ cụ thể (en hoặc vi)",
+        "parameters": [
+          {
+            "name": "lang",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "enum": ["en", "vi"] },
+            "description": "Mã ngôn ngữ (en = English, vi = Tiếng Việt)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "language": { "type": "string" },
+                    "translations": {
+                      "type": "object",
+                      "additionalProperties": { "type": "string" },
+                      "example": {
+                        "nav.home": "Trang chủ",
+                        "nav.menu": "Thực đơn",
+                        "nav.signIn": "Đăng nhập"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ngôn ngữ không được hỗ trợ",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/email/resend-welcome": {
+      "post": {
+        "tags": ["Email"],
+        "summary": "Gửi lại welcome email",
+        "description": "Gửi lại email chào mừng cho user đang đăng nhập. Yêu cầu Bearer token. Hỗ trợ EN/VI.",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "lang": { "type": "string", "enum": ["en", "vi"], "default": "en", "description": "Ngôn ngữ email" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email đã gửi thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Welcome email sent successfully" },
+                    "email": { "type": "string", "example": "user@example.com" },
+                    "lang": { "type": "string", "example": "en" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Chưa đăng nhập",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "404": {
+            "description": "User không tồn tại",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "500": {
+            "description": "SMTP gửi email thất bại",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -381,6 +534,13 @@
           "product_id": { "type": "integer" },
           "product": { "$ref": "#/components/schemas/Product" },
           "quantity": { "type": "integer" }
+        }
+      },
+      "SupportedLanguage": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string", "example": "en" },
+          "name": { "type": "string", "example": "English" }
         }
       }
     }

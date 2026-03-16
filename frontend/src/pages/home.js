@@ -4,18 +4,19 @@
 import { getFeaturedProducts, getCategories, addToCart, isLoggedIn } from '../api.js';
 import { renderProductCard } from '../components/product-card.js';
 import { showToast } from '../main.js';
+import { t } from '../i18n.js';
 
 export async function renderHomePage() {
   return `
     <section class="hero">
       <div class="container">
         <div class="hero-content">
-          <div class="hero-badge">✨ Crafted with Passion</div>
-          <h1>Discover the Finest <span class="highlight">Food & Beverages</span></h1>
-          <p>From artisan coffee and premium teas to freshly baked pastries — every sip and bite is an experience worth savoring.</p>
+          <div class="hero-badge">${t('home.heroBadge')}</div>
+          <h1>${t('home.heroTitle')} <span class="highlight">${t('home.heroHighlight')}</span></h1>
+          <p>${t('home.heroDesc')}</p>
           <div class="hero-actions">
-            <a href="#/products" class="btn btn-primary btn-lg" data-testid="explore-menu-btn">Explore Menu</a>
-            <a href="#/register" class="btn btn-secondary btn-lg" data-testid="join-btn">Join Brewly</a>
+            <a href="#/products" class="btn btn-primary btn-lg" data-testid="explore-menu-btn">${t('home.exploreMenu')}</a>
+            <a href="#/register" class="btn btn-secondary btn-lg" data-testid="join-btn">${t('home.joinBrewly')}</a>
           </div>
         </div>
       </div>
@@ -24,11 +25,11 @@ export async function renderHomePage() {
     <section class="section" id="categories-section">
       <div class="container">
         <div class="section-header">
-          <h2>Our Categories</h2>
-          <p>Explore our carefully curated selection of premium food and beverages</p>
+          <h2>${t('home.categories')}</h2>
+          <p>${t('home.categoriesDesc')}</p>
         </div>
         <div class="categories-grid" id="categories-grid">
-          <div class="loading-state"><div class="spinner"></div>Loading categories...</div>
+          <div class="loading-state"><div class="spinner"></div>${t('home.loadingCategories')}</div>
         </div>
       </div>
     </section>
@@ -36,11 +37,11 @@ export async function renderHomePage() {
     <section class="section" style="background: var(--bg-secondary);">
       <div class="container">
         <div class="section-header">
-          <h2>Popular Right Now</h2>
-          <p>Trending items loved by our customers</p>
+          <h2>${t('home.popular')}</h2>
+          <p>${t('home.popularDesc')}</p>
         </div>
         <div class="products-grid" id="featured-grid">
-          <div class="loading-state"><div class="spinner"></div>Loading products...</div>
+          <div class="loading-state"><div class="spinner"></div>${t('home.loadingProducts')}</div>
         </div>
       </div>
     </section>
@@ -64,7 +65,7 @@ export async function initHomePage() {
       `).join('');
     }
   } catch (e) {
-    document.getElementById('categories-grid').innerHTML = '<p style="color:var(--text-muted)">Unable to load categories</p>';
+    document.getElementById('categories-grid').innerHTML = `<p style="color:var(--text-muted)">${t('home.errorCategories')}</p>`;
   }
 
   // Load featured products
@@ -76,7 +77,7 @@ export async function initHomePage() {
       attachAddToCartHandlers(grid);
     }
   } catch (e) {
-    document.getElementById('featured-grid').innerHTML = '<p style="color:var(--text-muted)">Unable to load products</p>';
+    document.getElementById('featured-grid').innerHTML = `<p style="color:var(--text-muted)">${t('home.errorProducts')}</p>`;
   }
 }
 
@@ -91,7 +92,7 @@ function attachAddToCartHandlers(container) {
       const productId = parseInt(btn.dataset.productId);
       try {
         await addToCart(productId, 1);
-        showToast('✅ Added to cart!');
+        showToast(t('home.addedToCart'));
         window.dispatchEvent(new Event('cart-updated'));
       } catch (err) {
         showToast('❌ ' + err.message);

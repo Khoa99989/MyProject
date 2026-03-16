@@ -9,3 +9,5 @@ export { RegisterPage } from './RegisterPage';
 export { ProductListPage } from './ProductListPage';
 export { ProductDetailPage } from './ProductDetailPage';
 export { CartPage } from './CartPage';
+export { LanguagePage } from './LanguagePage';
+export { EmailPage } from './EmailPage';

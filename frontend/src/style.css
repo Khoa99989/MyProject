@@ -245,6 +245,38 @@ input, select, textarea {
   transform: scale(1);
 }
 
+/* --- Language Switcher --- */
+.lang-switcher {
+  display: flex;
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--bg-glass-border);
+  border-radius: var(--radius-full);
+  padding: 2px;
+  gap: 2px;
+}
+
+.lang-switcher button {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.lang-switcher button:hover {
+  color: var(--text-primary);
+}
+
+.lang-switcher button.active {
+  background: var(--gradient-accent);
+  color: var(--bg-primary);
+}
+
 /* --- Buttons --- */
 .btn {
   display: inline-flex;

@@ -4,6 +4,7 @@
 import { getProducts, getCategories, addToCart, isLoggedIn } from '../api.js';
 import { renderProductCard } from '../components/product-card.js';
 import { showToast } from '../main.js';
+import { t } from '../i18n.js';
 
 let debounceTimer;
 
@@ -12,28 +13,28 @@ export async function renderProductsPage() {
     <div class="products-page">
       <div class="container">
         <div class="section-header" style="text-align:left; margin-bottom: var(--space-xl);">
-          <h2>Our Menu</h2>
-          <p>Browse our full collection of premium food & beverages</p>
+          <h2>${t('products.title')}</h2>
+          <p>${t('products.subtitle')}</p>
         </div>
 
         <div class="products-layout">
           <aside class="products-sidebar">
             <div class="sidebar-section">
-              <h3>Search</h3>
+              <h3>${t('products.search')}</h3>
               <input type="text" class="search-input" id="search-input" 
-                     placeholder="Search products..." data-testid="search-input" />
+                     placeholder="${t('products.searchPlaceholder')}" data-testid="search-input" />
             </div>
             <div class="sidebar-section">
-              <h3>Categories</h3>
+              <h3>${t('products.categories')}</h3>
               <div class="category-filter" id="category-filter">
-                <button class="active" data-category="" data-testid="filter-all">All</button>
+                <button class="active" data-category="" data-testid="filter-all">${t('products.all')}</button>
               </div>
             </div>
           </aside>
 
           <div>
             <div class="products-grid" id="products-grid">
-              <div class="loading-state"><div class="spinner"></div>Loading products...</div>
+              <div class="loading-state"><div class="spinner"></div>${t('products.loading')}</div>
             </div>
           </div>
         </div>
@@ -54,7 +55,7 @@ export async function initProductsPage() {
     const filterContainer = document.getElementById('category-filter');
     if (filterContainer) {
       filterContainer.innerHTML = `
-        <button class="${!initialCategory ? 'active' : ''}" data-category="" data-testid="filter-all">All</button>
+        <button class="${!initialCategory ? 'active' : ''}" data-category="" data-testid="filter-all">${t('products.all')}</button>
         ${categories.map(cat => `
           <button class="${initialCategory == cat.id ? 'active' : ''}" 
                   data-category="${cat.id}" 
@@ -92,7 +93,7 @@ export async function initProductsPage() {
 async function loadProducts(params = {}) {
   const grid = document.getElementById('products-grid');
   if (!grid) return;
-  grid.innerHTML = '<div class="loading-state"><div class="spinner"></div>Loading...</div>';
+  grid.innerHTML = `<div class="loading-state"><div class="spinner"></div>${t('products.loadingShort')}</div>`;
 
   try {
     const data = await getProducts(params);
@@ -102,8 +103,8 @@ async function loadProducts(params = {}) {
       grid.innerHTML = `
         <div class="empty-state" style="grid-column: 1/-1;">
           <div class="empty-state-icon">🔍</div>
-          <h3>No products found</h3>
-          <p>Try adjusting your search or filter criteria</p>
+          <h3>${t('products.noProducts')}</h3>
+          <p>${t('products.noProductsDesc')}</p>
         </div>
       `;
       return;
@@ -122,7 +123,7 @@ async function loadProducts(params = {}) {
         const productId = parseInt(btn.dataset.productId);
         try {
           await addToCart(productId, 1);
-          showToast('✅ Added to cart!');
+          showToast(t('products.addedToCart'));
           window.dispatchEvent(new Event('cart-updated'));
         } catch (err) {
           showToast('❌ ' + err.message);
@@ -130,6 +131,6 @@ async function loadProducts(params = {}) {
       });
     });
   } catch (e) {
-    grid.innerHTML = '<p style="color:var(--text-muted);grid-column:1/-1;">Failed to load products</p>';
+    grid.innerHTML = `<p style="color:var(--text-muted);grid-column:1/-1;">${t('products.error')}</p>`;
   }
 }

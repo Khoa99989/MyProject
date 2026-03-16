@@ -3,6 +3,7 @@
  */
 import { getCart, updateCartItem, removeFromCart, clearCart, isLoggedIn } from '../api.js';
 import { showToast } from '../main.js';
+import { t } from '../i18n.js';
 
 export async function renderCartPage() {
   if (!isLoggedIn()) {
@@ -10,9 +11,9 @@ export async function renderCartPage() {
       <div class="auth-page">
         <div class="empty-state">
           <div class="empty-state-icon">🔐</div>
-          <h3>Sign in to view your cart</h3>
-          <p>You need to be logged in to add items and view your cart</p>
-          <a href="#/login" class="btn btn-primary" data-testid="login-prompt">Sign In</a>
+          <h3>${t('cart.signInRequired')}</h3>
+          <p>${t('cart.signInRequiredDesc')}</p>
+          <a href="#/login" class="btn btn-primary" data-testid="login-prompt">${t('cart.signIn')}</a>
         </div>
       </div>
     `;
@@ -22,10 +23,10 @@ export async function renderCartPage() {
     <div class="cart-page">
       <div class="container">
         <div class="section-header" style="text-align:left; margin-bottom: var(--space-xl);">
-          <h2>Your Cart</h2>
+          <h2>${t('cart.title')}</h2>
         </div>
         <div id="cart-content">
-          <div class="loading-state"><div class="spinner"></div>Loading cart...</div>
+          <div class="loading-state"><div class="spinner"></div>${t('cart.loading')}</div>
         </div>
       </div>
     </div>
@@ -49,9 +50,9 @@ async function loadCart() {
       container.innerHTML = `
         <div class="empty-state">
           <div class="empty-state-icon">🛒</div>
-          <h3>Your cart is empty</h3>
-          <p>Add some delicious items from our menu</p>
-          <a href="#/products" class="btn btn-primary" data-testid="browse-menu">Browse Menu</a>
+          <h3>${t('cart.empty')}</h3>
+          <p>${t('cart.emptyDesc')}</p>
+          <a href="#/products" class="btn btn-primary" data-testid="browse-menu">${t('cart.browseMenu')}</a>
         </div>
       `;
       window.dispatchEvent(new Event('cart-updated'));
@@ -77,7 +78,7 @@ async function loadCart() {
                     <span data-testid="qty-${item.id}">${item.quantity}</span>
                     <button class="qty-btn" data-action="increase" data-item-id="${item.id}" data-testid="increase-${item.id}">+</button>
                   </div>
-                  <button class="btn btn-ghost btn-sm remove-btn" data-item-id="${item.id}" data-testid="remove-${item.id}">🗑️ Remove</button>
+                  <button class="btn btn-ghost btn-sm remove-btn" data-item-id="${item.id}" data-testid="remove-${item.id}">🗑️ ${t('cart.remove')}</button>
                 </div>
               </div>
             </div>
@@ -85,21 +86,21 @@ async function loadCart() {
         </div>
 
         <div class="cart-summary" data-testid="cart-summary">
-          <h3>Order Summary</h3>
+          <h3>${t('cart.orderSummary')}</h3>
           <div class="cart-summary-row">
-            <span>Subtotal (${items.reduce((s, i) => s + i.quantity, 0)} items)</span>
+            <span>${t('cart.subtotal')} (${items.reduce((s, i) => s + i.quantity, 0)} ${t('cart.items')})</span>
             <span>$${data.total.toFixed(2)}</span>
           </div>
           <div class="cart-summary-row">
-            <span>Delivery</span>
-            <span style="color:var(--success);">Free</span>
+            <span>${t('cart.delivery')}</span>
+            <span style="color:var(--success);">${t('cart.free')}</span>
           </div>
           <div class="cart-summary-total">
-            <span>Total</span>
+            <span>${t('cart.total')}</span>
             <span data-testid="cart-total">$${data.total.toFixed(2)}</span>
           </div>
-          <button class="btn btn-primary" data-testid="checkout-btn">Checkout</button>
-          <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:var(--space-sm);" id="clear-cart-btn" data-testid="clear-cart">Clear Cart</button>
+          <button class="btn btn-primary" data-testid="checkout-btn">${t('cart.checkout')}</button>
+          <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:var(--space-sm);" id="clear-cart-btn" data-testid="clear-cart">${t('cart.clearCart')}</button>
         </div>
       </div>
     `;
@@ -115,7 +116,7 @@ async function loadCart() {
 
         if (newQty < 1) {
           await removeFromCart(itemId);
-          showToast('🗑️ Item removed');
+          showToast(t('cart.itemRemoved'));
         } else {
           await updateCartItem(itemId, newQty);
         }
@@ -129,7 +130,7 @@ async function loadCart() {
       btn.addEventListener('click', async () => {
         const itemId = parseInt(btn.dataset.itemId);
         await removeFromCart(itemId);
-        showToast('🗑️ Item removed');
+        showToast(t('cart.itemRemoved'));
         await loadCart();
         window.dispatchEvent(new Event('cart-updated'));
       });
@@ -138,7 +139,7 @@ async function loadCart() {
     // Clear cart
     document.getElementById('clear-cart-btn')?.addEventListener('click', async () => {
       await clearCart();
-      showToast('🗑️ Cart cleared');
+      showToast(t('cart.cartCleared'));
       await loadCart();
       window.dispatchEvent(new Event('cart-updated'));
     });
@@ -146,6 +147,6 @@ async function loadCart() {
     window.dispatchEvent(new Event('cart-updated'));
 
   } catch (e) {
-    container.innerHTML = '<p style="color:var(--text-muted);">Failed to load cart</p>';
+    container.innerHTML = `<p style="color:var(--text-muted);">${t('cart.error')}</p>`;
   }
 }

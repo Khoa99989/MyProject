@@ -12,6 +12,7 @@ import { renderCartPage, initCartPage } from './pages/cart.js';
 import { renderLoginPage, initLoginPage } from './pages/login.js';
 import { renderRegisterPage, initRegisterPage } from './pages/register.js';
 import { getCart, isLoggedIn } from './api.js';
+import { t } from './i18n.js';
 
 const app = document.getElementById('app');
 
@@ -80,9 +81,9 @@ async function router() {
       <div class="auth-page">
         <div class="empty-state">
           <div class="empty-state-icon">🔍</div>
-          <h3>Page not found</h3>
-          <p>The page you're looking for doesn't exist</p>
-          <a href="#/" class="btn btn-primary">Go Home</a>
+          <h3>${t('notFound.title')}</h3>
+          <p>${t('notFound.desc')}</p>
+          <a href="#/" class="btn btn-primary">${t('notFound.goHome')}</a>
         </div>
       </div>
     `;

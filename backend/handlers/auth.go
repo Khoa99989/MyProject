@@ -25,6 +25,7 @@ type RegisterRequest struct {
 	Name     string `json:"name" binding:"required,min=2"`
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required,min=6"`
+	Lang     string `json:"lang"`
 }
 
 // LoginRequest is the JSON body for login
@@ -78,6 +79,13 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
 	}
+
+	// Send welcome email asynchronously in user's language
+	lang := req.Lang
+	if lang == "" {
+		lang = "en"
+	}
+	SendWelcomeEmail(user.Name, user.Email, lang)
 
 	// Generate JWT
 	token, err := generateToken(user)

@@ -67,6 +67,8 @@ func main() {
 	authHandler := handlers.NewAuthHandler(db)
 	productHandler := handlers.NewProductHandler(db)
 	cartHandler := handlers.NewCartHandler(db)
+	languageHandler := handlers.NewLanguageHandler()
+	emailHandler := handlers.NewEmailHandler(db)
 
 	// --- Router ---
 	r := gin.Default()
@@ -141,6 +143,11 @@ func main() {
 		api.GET("/products/featured", productHandler.GetFeaturedProducts)
 		api.GET("/products/:id", productHandler.GetProduct)
 		api.GET("/categories", productHandler.GetCategories)
+
+		// Language / i18n
+		api.GET("/languages", languageHandler.GetLanguages)
+		api.GET("/languages/all", languageHandler.GetAllTranslations)
+		api.GET("/languages/:lang", languageHandler.GetTranslations)
 	}
 
 	// --- Protected Routes ---
@@ -156,6 +163,9 @@ func main() {
 		protected.PUT("/cart/:id", cartHandler.UpdateCartItem)
 		protected.DELETE("/cart/:id", cartHandler.RemoveFromCart)
 		protected.DELETE("/cart", cartHandler.ClearCart)
+
+		// Email
+		protected.POST("/email/resend-welcome", emailHandler.ResendWelcome)
 	}
 
 	// --- Health Check ---

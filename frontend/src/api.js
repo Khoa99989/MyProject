@@ -71,10 +71,10 @@ export async function login(email, password) {
   return data;
 }
 
-export async function register(name, email, password) {
+export async function register(name, email, password, lang = 'en') {
   const data = await request('/register', {
     method: 'POST',
-    body: JSON.stringify({ name, email, password }),
+    body: JSON.stringify({ name, email, password, lang }),
   });
   setToken(data.token);
   setUser(data.user);
