@@ -11,3 +11,4 @@ export { ProductDetailPage } from './ProductDetailPage';
 export { CartPage } from './CartPage';
 export { LanguagePage } from './LanguagePage';
 export { EmailPage } from './EmailPage';
+export { NavbarComponent } from './NavbarComponent';

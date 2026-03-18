@@ -1,0 +1,48 @@
+[
+  {
+    "testCase": "Register with valid data",
+    "name": "Test User",
+    "email": "auto_unique",
+    "password": "password123",
+    "confirmPassword": "password123",
+    "expectedResult": "success",
+    "description": "Should register successfully and redirect to home"
+  },
+  {
+    "testCase": "Register with mismatched passwords",
+    "name": "Mismatch User",
+    "email": "mismatch@example.com",
+    "password": "password123",
+    "confirmPassword": "differentpass",
+    "expectedResult": "error",
+    "expectedError": "Passwords do not match",
+    "description": "Should show error when passwords do not match"
+  },
+  {
+    "testCase": "Register with empty name",
+    "name": "",
+    "email": "noname@example.com",
+    "password": "password123",
+    "confirmPassword": "password123",
+    "expectedResult": "validation_error",
+    "description": "Should show validation error for empty name"
+  },
+  {
+    "testCase": "Register with empty email",
+    "name": "No Email User",
+    "email": "",
+    "password": "password123",
+    "confirmPassword": "password123",
+    "expectedResult": "validation_error",
+    "description": "Should show validation error for empty email"
+  },
+  {
+    "testCase": "Register with empty password",
+    "name": "No Pass User",
+    "email": "nopass@example.com",
+    "password": "",
+    "confirmPassword": "",
+    "expectedResult": "validation_error",
+    "description": "Should show validation error for empty password"
+  }
+]

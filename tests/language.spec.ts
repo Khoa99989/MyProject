@@ -27,10 +27,7 @@ test.describe('Language Switcher Tests', () => {
 
       logger.step('Switching to Vietnamese');
       await languagePage.switchToVietnamese();
-
-      // Wait for re-render
-      await languagePage.page.locator('#products-grid .loading-state, #products-grid .spinner')
-        .waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {});
+      await languagePage.waitForProductsRerender();
 
       // Verify Vietnamese text
       await expect(languagePage.pageHeading).toHaveText('Thực đơn');
@@ -48,8 +45,7 @@ test.describe('Language Switcher Tests', () => {
       await languagePage.page.waitForTimeout(500);
 
       await languagePage.switchToEnglish();
-      await languagePage.page.locator('#products-grid .loading-state, #products-grid .spinner')
-        .waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {});
+      await languagePage.waitForProductsRerender();
 
       await expect(languagePage.pageHeading).toHaveText('Our Menu');
       await expect(languagePage.navHome).toHaveText('Home');
@@ -59,16 +55,10 @@ test.describe('Language Switcher Tests', () => {
 
     test('should translate Add to Cart buttons to Vietnamese', async ({ languagePage }) => {
       await languagePage.gotoProducts();
-
-      // Wait for products to load first
-      await languagePage.page.locator('#products-grid .loading-state, #products-grid .spinner')
-        .waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {});
+      await languagePage.waitForProductsRerender();
 
       await languagePage.switchToVietnamese();
-
-      // Wait for re-render after language switch
-      await languagePage.page.locator('#products-grid .loading-state, #products-grid .spinner')
-        .waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {});
+      await languagePage.waitForProductsRerender();
 
       const firstAddBtn = languagePage.addToCartButtons.first();
       await expect(firstAddBtn).toBeVisible({ timeout: 10000 });
@@ -110,8 +100,8 @@ test.describe('Language Switcher Tests', () => {
       logger.step('Switching to Vietnamese on login page');
       await languagePage.switchToVietnamese();
 
-      await expect(languagePage.page.locator('.auth-card h1')).toHaveText('Chào mừng trở lại');
-      await expect(languagePage.page.locator('.auth-card [data-testid="login-button"]')).toHaveText('Đăng nhập');
+      await expect(languagePage.loginFormTitle).toHaveText('Chào mừng trở lại');
+      await expect(languagePage.loginFormButton).toHaveText('Đăng nhập');
       logger.stepDone('Login page translated to Vietnamese');
     });
 
@@ -121,8 +111,8 @@ test.describe('Language Switcher Tests', () => {
       logger.step('Switching to Vietnamese on register page');
       await languagePage.switchToVietnamese();
 
-      await expect(languagePage.page.locator('.auth-card h1')).toHaveText('Tham gia Brewly');
-      await expect(languagePage.page.locator('[data-testid="register-button"]')).toHaveText('Tạo tài khoản');
+      await expect(languagePage.registerFormTitle).toHaveText('Tham gia Brewly');
+      await expect(languagePage.registerFormButton).toHaveText('Tạo tài khoản');
       logger.stepDone('Register page translated to Vietnamese');
     });
   });
@@ -165,8 +155,7 @@ test.describe('Language Switcher Tests', () => {
 
       // Hard reload
       await languagePage.page.reload();
-      await languagePage.page.locator('#products-grid .loading-state, #products-grid .spinner')
-        .waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {});
+      await languagePage.waitForProductsRerender();
 
       const lang = await languagePage.getActiveLang();
       expect(lang).toBe('vi');

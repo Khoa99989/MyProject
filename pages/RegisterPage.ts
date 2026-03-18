@@ -13,6 +13,7 @@ export class RegisterPage extends BasePage {
   readonly submitButton: Locator;
   readonly errorMessage: Locator;
   readonly loginLink: Locator;
+  readonly formTitle: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -26,6 +27,7 @@ export class RegisterPage extends BasePage {
     this.errorMessage = page.locator('[data-testid="error-message"]');
     // Use data-testid only to avoid matching the navbar "Sign In" link
     this.loginLink = page.locator('[data-testid="login-link"]');
+    this.formTitle = page.locator('.auth-card h1');
   }
 
   // --------------- Actions ---------------
@@ -58,5 +60,17 @@ export class RegisterPage extends BasePage {
   /** Click the login link */
   async goToLogin(): Promise<void> {
     await this.clickElement(this.loginLink);
+  }
+
+  /**
+   * Wait for successful registration — logout button should appear after redirect + reload.
+   * Similar to LoginPage.waitForLoginSuccess().
+   */
+  async waitForRegisterSuccess(options?: { timeout?: number }): Promise<void> {
+    const timeout = options?.timeout ?? 15000;
+    await this.page.locator('[data-testid="logout-button"]').waitFor({
+      state: 'visible',
+      timeout,
+    });
   }
 }

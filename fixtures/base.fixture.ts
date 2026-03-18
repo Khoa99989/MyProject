@@ -7,6 +7,7 @@ import { CartPage } from '../pages/CartPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { LanguagePage } from '../pages/LanguagePage';
 import { EmailPage } from '../pages/EmailPage';
+import { NavbarComponent } from '../pages/NavbarComponent';
 import { ApiHelper } from '../utils/ApiHelper';
 import { WaitHelper } from '../utils/WaitHelper';
 import { Logger } from '../utils/Logger';
@@ -24,6 +25,7 @@ type CustomFixtures = {
   registerPage: RegisterPage;
   languagePage: LanguagePage;
   emailPage: EmailPage;
+  navbarComponent: NavbarComponent;
   apiHelper: ApiHelper;
   waitHelper: WaitHelper;
   logger: Logger;
@@ -72,6 +74,11 @@ export const test = base.extend<CustomFixtures>({
   emailPage: async ({ page }, use) => {
     const emailPage = new EmailPage(page);
     await use(emailPage);
+  },
+
+  navbarComponent: async ({ page }, use) => {
+    const navbarComponent = new NavbarComponent(page);
+    await use(navbarComponent);
   },
 
   apiHelper: async ({ request }, use) => {

@@ -28,6 +28,12 @@ export class LanguagePage extends BasePage {
   readonly exploreMenuBtn: Locator;
   readonly joinBrewlyBtn: Locator;
 
+  // Auth page locators (for verifying translations)
+  readonly loginFormTitle: Locator;
+  readonly loginFormButton: Locator;
+  readonly registerFormTitle: Locator;
+  readonly registerFormButton: Locator;
+
   constructor(page: Page) {
     super(page);
     this.langSwitcher = page.locator('[data-testid="lang-switcher"]');
@@ -47,6 +53,12 @@ export class LanguagePage extends BasePage {
     this.heroTitle = page.locator('.hero h1');
     this.exploreMenuBtn = page.locator('[data-testid="explore-menu-btn"]');
     this.joinBrewlyBtn = page.locator('[data-testid="join-btn"]');
+
+    // Auth form locators — used for verifying language on login/register pages
+    this.loginFormTitle = page.locator('.auth-card h1');
+    this.loginFormButton = page.locator('.auth-card [data-testid="login-button"]');
+    this.registerFormTitle = page.locator('.auth-card h1');
+    this.registerFormButton = page.locator('[data-testid="register-button"]');
   }
 
   // --------------- Actions ---------------
@@ -80,13 +92,17 @@ export class LanguagePage extends BasePage {
     return await this.page.evaluate(() => localStorage.getItem('brewly_lang') ?? 'en');
   }
 
+  /** Wait for products to finish loading after language switch */
+  async waitForProductsRerender(): Promise<void> {
+    await this.page.locator('#products-grid .loading-state, #products-grid .spinner')
+      .waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {});
+  }
+
   /** Navigate to products page */
   async gotoProducts(): Promise<void> {
     await this.navigate('/#/products');
     await this.waitForPageLoad();
-    // Wait for products to load
-    await this.page.locator('#products-grid .loading-state, #products-grid .spinner')
-      .waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {});
+    await this.waitForProductsRerender();
   }
 
   /** Navigate to home page */
