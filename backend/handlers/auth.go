@@ -25,8 +25,8 @@ func NewAuthHandler(svc *services.AuthService) *AuthHandler {
 
 // RegisterRequest is the JSON body for registration
 type RegisterRequest struct {
-	Name     string `json:"name" binding:"required,min=2"`
-	Email    string `json:"email" binding:"required,email"`
+	Name     string `json:"name" binding:"required"`
+	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required,min=6"`
 	Lang     string `json:"lang"`
 }
@@ -64,6 +64,8 @@ func toUserResponse(u models.User) UserResponse {
 // mapServiceError maps a service-layer error to the appropriate HTTP status code and message
 func mapServiceError(err error) (int, string) {
 	switch {
+	case errors.Is(err, services.ErrInvalidInput):
+		return http.StatusBadRequest, "Invalid input: " + err.Error()
 	case errors.Is(err, services.ErrEmailAlreadyExists):
 		return http.StatusConflict, "Email already registered"
 	case errors.Is(err, services.ErrInvalidCredentials):

@@ -5,6 +5,7 @@ import (
 	"fnb-backend/middleware"
 	"fnb-backend/models"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -17,12 +18,16 @@ import (
 
 var (
 	ErrEmailAlreadyExists = errors.New("email already registered")
+	ErrInvalidInput       = errors.New("invalid input")
 	ErrHashPassword       = errors.New("failed to hash password")
 	ErrCreateUser         = errors.New("failed to create user in database")
 	ErrGenerateToken      = errors.New("failed to generate authentication token")
 	ErrInvalidCredentials = errors.New("invalid email or password")
 	ErrUserNotFound       = errors.New("user not found")
 )
+
+// emailRegex is a simple email format check
+var emailRegex = regexp.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`)
 
 // ─── DTOs ───────────────────────────────────────────────────────────────────────
 
@@ -84,6 +89,16 @@ func (s *AuthService) RegisterUser(input RegisterInput) (*AuthResult, error) {
 	input.Email = strings.ToLower(strings.TrimSpace(input.Email))
 	if input.Lang == "" {
 		input.Lang = "en"
+	}
+
+	// Step 1b: Validate sanitized input
+	if len(input.Name) < 2 {
+		log.Printf("[AUTH] Registration failed: name too short after trim")
+		return nil, ErrInvalidInput
+	}
+	if !emailRegex.MatchString(input.Email) {
+		log.Printf("[AUTH] Registration failed: invalid email format after trim")
+		return nil, ErrInvalidInput
 	}
 
 	log.Printf("[AUTH] Registration attempt: email=%s", input.Email)
