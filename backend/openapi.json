@@ -2,24 +2,24 @@
   "openapi": "3.0.3",
   "info": {
     "title": "MyProject API",
-    "description": "API cho MyProject - Auth (đăng ký, đăng nhập), Products, Cart. Backend chạy tại http://localhost:8080.",
+    "description": "RESTful API for MyProject — Authentication, Products, Cart, Internationalization, and Email services. Backend runs at http://localhost:8080.",
     "version": "1.0.0"
   },
   "servers": [
     { "url": "http://localhost:8080", "description": "Local development" }
   ],
   "tags": [
-    { "name": "Auth", "description": "Đăng ký, đăng nhập" },
-    { "name": "Products", "description": "Sản phẩm và danh mục" },
-    { "name": "Cart", "description": "Giỏ hàng (cần Bearer token)" },
-    { "name": "Language", "description": "Đa ngôn ngữ (i18n) — EN / VI" },
-    { "name": "Email", "description": "Gửi email (cần Bearer token)" }
+    { "name": "Auth", "description": "User registration and authentication" },
+    { "name": "Products", "description": "Products and categories" },
+    { "name": "Cart", "description": "Shopping cart (requires Bearer token)" },
+    { "name": "Language", "description": "Internationalization (i18n) — EN / VI" },
+    { "name": "Email", "description": "Email operations (requires Bearer token)" }
   ],
   "paths": {
     "/api/register": {
       "post": {
         "tags": ["Auth"],
-        "summary": "Đăng ký tài khoản",
+        "summary": "Register a new account",
         "requestBody": {
           "required": true,
           "content": {
@@ -31,7 +31,7 @@
                   "name": { "type": "string", "minLength": 2 },
                   "email": { "type": "string", "format": "email" },
                   "password": { "type": "string", "minLength": 6 },
-                  "lang": { "type": "string", "enum": ["en", "vi"], "default": "en", "description": "Ngôn ngữ cho welcome email" }
+                  "lang": { "type": "string", "enum": ["en", "vi"], "default": "en", "description": "Language for the welcome email" }
                 }
               }
             }
@@ -39,15 +39,15 @@
         },
         "responses": {
           "201": {
-            "description": "Đăng ký thành công — welcome email được gửi tới user",
+            "description": "Registration successful — a welcome email is sent to the user",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } }
           },
           "400": {
-            "description": "Dữ liệu không hợp lệ",
+            "description": "Invalid request data",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           },
           "409": {
-            "description": "Email đã tồn tại",
+            "description": "Email already exists",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           }
         }
@@ -56,7 +56,7 @@
     "/api/login": {
       "post": {
         "tags": ["Auth"],
-        "summary": "Đăng nhập",
+        "summary": "Log in",
         "requestBody": {
           "required": true,
           "content": {
@@ -74,15 +74,15 @@
         },
         "responses": {
           "200": {
-            "description": "Đăng nhập thành công",
+            "description": "Login successful",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } }
           },
           "400": {
-            "description": "Dữ liệu không hợp lệ",
+            "description": "Invalid request data",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           },
           "401": {
-            "description": "Sai email hoặc mật khẩu",
+            "description": "Incorrect email or password",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           }
         }
@@ -91,15 +91,15 @@
     "/api/profile": {
       "get": {
         "tags": ["Auth"],
-        "summary": "Lấy thông tin user (cần đăng nhập)",
+        "summary": "Get current user profile (requires authentication)",
         "security": [{ "BearerAuth": [] }],
         "responses": {
           "200": {
-            "description": "Thành công",
+            "description": "Success",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserResponse" } } }
           },
           "401": {
-            "description": "Chưa đăng nhập hoặc token hết hạn",
+            "description": "Not authenticated or token expired",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           }
         }
@@ -108,11 +108,11 @@
     "/api/products": {
       "get": {
         "tags": ["Products"],
-        "summary": "Danh sách sản phẩm",
+        "summary": "List all products",
         "parameters": [
-          { "name": "category", "in": "query", "schema": { "type": "integer" }, "description": "Lọc theo category_id" },
-          { "name": "search", "in": "query", "schema": { "type": "string" }, "description": "Tìm theo tên/mô tả" },
-          { "name": "in_stock", "in": "query", "schema": { "type": "boolean" }, "description": "Chỉ sản phẩm còn hàng" },
+          { "name": "category", "in": "query", "schema": { "type": "integer" }, "description": "Filter by category ID" },
+          { "name": "search", "in": "query", "schema": { "type": "string" }, "description": "Search by name or description" },
+          { "name": "in_stock", "in": "query", "schema": { "type": "boolean" }, "description": "Only show in-stock products" },
           { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
           { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } }
         ],
@@ -139,7 +139,7 @@
     "/api/products/featured": {
       "get": {
         "tags": ["Products"],
-        "summary": "Sản phẩm nổi bật (top rating)",
+        "summary": "Get featured products (top rated)",
         "responses": {
           "200": {
             "description": "OK",
@@ -151,7 +151,7 @@
     "/api/products/{id}": {
       "get": {
         "tags": ["Products"],
-        "summary": "Chi tiết sản phẩm",
+        "summary": "Get product details",
         "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
         "responses": {
           "200": {
@@ -159,7 +159,7 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } }
           },
           "404": {
-            "description": "Không tìm thấy",
+            "description": "Product not found",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           }
         }
@@ -168,7 +168,7 @@
     "/api/categories": {
       "get": {
         "tags": ["Products"],
-        "summary": "Danh sách danh mục",
+        "summary": "List all categories",
         "responses": {
           "200": {
             "description": "OK",
@@ -180,7 +180,7 @@
     "/api/cart": {
       "get": {
         "tags": ["Cart"],
-        "summary": "Xem giỏ hàng",
+        "summary": "View shopping cart",
         "security": [{ "BearerAuth": [] }],
         "responses": {
           "200": {
@@ -199,14 +199,14 @@
             }
           },
           "401": {
-            "description": "Chưa đăng nhập",
+            "description": "Not authenticated",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           }
         }
       },
       "post": {
         "tags": ["Cart"],
-        "summary": "Thêm vào giỏ hàng",
+        "summary": "Add item to cart",
         "security": [{ "BearerAuth": [] }],
         "requestBody": {
           "required": true,
@@ -225,7 +225,7 @@
         },
         "responses": {
           "201": {
-            "description": "Đã thêm vào giỏ",
+            "description": "Item added to cart",
             "content": {
               "application/json": {
                 "schema": {
@@ -239,27 +239,27 @@
             }
           },
           "400": {
-            "description": "Dữ liệu không hợp lệ / Hết hàng",
+            "description": "Invalid data or out of stock",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           },
           "401": {
-            "description": "Chưa đăng nhập",
+            "description": "Not authenticated",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           },
           "404": {
-            "description": "Sản phẩm không tồn tại",
+            "description": "Product not found",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           }
         }
       },
       "delete": {
         "tags": ["Cart"],
-        "summary": "Xóa toàn bộ giỏ hàng",
+        "summary": "Clear entire cart",
         "security": [{ "BearerAuth": [] }],
         "responses": {
-          "200": { "description": "Đã xóa giỏ hàng" },
+          "200": { "description": "Cart cleared" },
           "401": {
-            "description": "Chưa đăng nhập",
+            "description": "Not authenticated",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           }
         }
@@ -268,7 +268,7 @@
     "/api/cart/{id}": {
       "put": {
         "tags": ["Cart"],
-        "summary": "Cập nhật số lượng item trong giỏ",
+        "summary": "Update cart item quantity",
         "security": [{ "BearerAuth": [] }],
         "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "Cart item ID" }],
         "requestBody": {
@@ -284,21 +284,21 @@
           }
         },
         "responses": {
-          "200": { "description": "Đã cập nhật" },
-          "400": { "description": "Dữ liệu không hợp lệ" },
-          "401": { "description": "Chưa đăng nhập" },
-          "404": { "description": "Không tìm thấy item" }
+          "200": { "description": "Cart item updated" },
+          "400": { "description": "Invalid data" },
+          "401": { "description": "Not authenticated" },
+          "404": { "description": "Cart item not found" }
         }
       },
       "delete": {
         "tags": ["Cart"],
-        "summary": "Xóa một item khỏi giỏ",
+        "summary": "Remove item from cart",
         "security": [{ "BearerAuth": [] }],
         "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
         "responses": {
-          "200": { "description": "Đã xóa" },
-          "401": { "description": "Chưa đăng nhập" },
-          "404": { "description": "Không tìm thấy item" }
+          "200": { "description": "Item removed" },
+          "401": { "description": "Not authenticated" },
+          "404": { "description": "Cart item not found" }
         }
       }
     },
@@ -327,8 +327,8 @@
     "/api/languages": {
       "get": {
         "tags": ["Language"],
-        "summary": "Danh sách ngôn ngữ hỗ trợ",
-        "description": "Trả về danh sách các ngôn ngữ được hỗ trợ (code + tên)",
+        "summary": "List supported languages",
+        "description": "Returns the list of supported languages (code + name)",
         "responses": {
           "200": {
             "description": "OK",
@@ -351,8 +351,8 @@
     "/api/languages/all": {
       "get": {
         "tags": ["Language"],
-        "summary": "Tất cả bản dịch cho mọi ngôn ngữ",
-        "description": "Trả về toàn bộ bản dịch (EN + VI) trong một request, tiện cho front-end cache",
+        "summary": "Get all translations for every language",
+        "description": "Returns all translations (EN + VI) in a single request, convenient for front-end caching",
         "responses": {
           "200": {
             "description": "OK",
@@ -367,7 +367,7 @@
                     },
                     "translations": {
                       "type": "object",
-                      "description": "Map lang_code → { key: value }",
+                      "description": "Map of lang_code → { key: value }",
                       "additionalProperties": {
                         "type": "object",
                         "additionalProperties": { "type": "string" }
@@ -384,15 +384,15 @@
     "/api/languages/{lang}": {
       "get": {
         "tags": ["Language"],
-        "summary": "Bản dịch theo ngôn ngữ",
-        "description": "Trả về tất cả keys dịch cho một ngôn ngữ cụ thể (en hoặc vi)",
+        "summary": "Get translations by language",
+        "description": "Returns all translation keys for a specific language (en or vi)",
         "parameters": [
           {
             "name": "lang",
             "in": "path",
             "required": true,
             "schema": { "type": "string", "enum": ["en", "vi"] },
-            "description": "Mã ngôn ngữ (en = English, vi = Tiếng Việt)"
+            "description": "Language code (en = English, vi = Vietnamese)"
           }
         ],
         "responses": {
@@ -408,9 +408,9 @@
                       "type": "object",
                       "additionalProperties": { "type": "string" },
                       "example": {
-                        "nav.home": "Trang chủ",
-                        "nav.menu": "Thực đơn",
-                        "nav.signIn": "Đăng nhập"
+                        "nav.home": "Home",
+                        "nav.menu": "Menu",
+                        "nav.signIn": "Sign In"
                       }
                     }
                   }
@@ -419,7 +419,7 @@
             }
           },
           "404": {
-            "description": "Ngôn ngữ không được hỗ trợ",
+            "description": "Language not supported",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           }
         }
@@ -428,8 +428,8 @@
     "/api/email/resend-welcome": {
       "post": {
         "tags": ["Email"],
-        "summary": "Gửi lại welcome email",
-        "description": "Gửi lại email chào mừng cho user đang đăng nhập. Yêu cầu Bearer token. Hỗ trợ EN/VI.",
+        "summary": "Resend welcome email",
+        "description": "Resends the welcome email to the currently authenticated user. Requires Bearer token. Supports EN/VI.",
         "security": [{ "BearerAuth": [] }],
         "requestBody": {
           "content": {
@@ -437,7 +437,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "lang": { "type": "string", "enum": ["en", "vi"], "default": "en", "description": "Ngôn ngữ email" }
+                  "lang": { "type": "string", "enum": ["en", "vi"], "default": "en", "description": "Email language" }
                 }
               }
             }
@@ -445,7 +445,7 @@
         },
         "responses": {
           "200": {
-            "description": "Email đã gửi thành công",
+            "description": "Email sent successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -460,15 +460,15 @@
             }
           },
           "401": {
-            "description": "Chưa đăng nhập",
+            "description": "Not authenticated",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           },
           "404": {
-            "description": "User không tồn tại",
+            "description": "User not found",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           },
           "500": {
-            "description": "SMTP gửi email thất bại",
+            "description": "Failed to send email via SMTP",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           }
         }
@@ -481,7 +481,7 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT",
-        "description": "Token nhận được từ POST /api/login"
+        "description": "JWT token obtained from POST /api/login"
       }
     },
     "schemas": {

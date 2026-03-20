@@ -9,11 +9,17 @@ services:
     ports:
       - "8080:8080"
     environment:
+      - DATABASE_URL=postgresql://postgres.ygmvsmlzpfkznyoayfqy:iojlrAqa7UhpaUi0@aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres?sslmode=require&default_query_exec_mode=simple_protocol
       - SMTP_HOST=mailhog
       - SMTP_PORT=1025
       - SMTP_FROM=noreply@brewly.com
     depends_on:
       - mailhog
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
       interval: 10s

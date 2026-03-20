@@ -6,6 +6,7 @@ import (
 	"fnb-backend/middleware"
 	"fnb-backend/models"
 	"fnb-backend/seed"
+	"fnb-backend/services"
 	"io/fs"
 	"log"
 	"net/http"
@@ -64,7 +65,8 @@ func main() {
 	seed.SeedDatabase(db)
 
 	// --- Handlers ---
-	authHandler := handlers.NewAuthHandler(db)
+	authService := services.NewAuthService(db, handlers.SendWelcomeEmail)
+	authHandler := handlers.NewAuthHandler(authService)
 	productHandler := handlers.NewProductHandler(db)
 	cartHandler := handlers.NewCartHandler(db)
 	languageHandler := handlers.NewLanguageHandler()

@@ -1,24 +1,27 @@
 package handlers
 
 import (
-	"fnb-backend/middleware"
+	"errors"
 	"fnb-backend/models"
+	"fnb-backend/services"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
-	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
+// ─── Handler ────────────────────────────────────────────────────────────────────
+
+// AuthHandler is a thin HTTP controller that delegates business logic to AuthService.
 type AuthHandler struct {
-	DB *gorm.DB
+	service *services.AuthService
 }
 
-func NewAuthHandler(db *gorm.DB) *AuthHandler {
-	return &AuthHandler{DB: db}
+// NewAuthHandler creates a new AuthHandler with the given AuthService
+func NewAuthHandler(svc *services.AuthService) *AuthHandler {
+	return &AuthHandler{service: svc}
 }
+
+// ─── Request / Response DTOs ────────────────────────────────────────────────────
 
 // RegisterRequest is the JSON body for registration
 type RegisterRequest struct {
@@ -40,14 +43,42 @@ type AuthResponse struct {
 	User  UserResponse `json:"user"`
 }
 
-// UserResponse is a safe user representation (no password)
+// UserResponse is a safe user representation (no password hash)
 type UserResponse struct {
 	ID    uint   `json:"id"`
 	Name  string `json:"name"`
 	Email string `json:"email"`
 }
 
-// Register creates a new user account
+// ─── Helpers ────────────────────────────────────────────────────────────────────
+
+// toUserResponse converts a models.User to a safe UserResponse
+func toUserResponse(u models.User) UserResponse {
+	return UserResponse{
+		ID:    u.ID,
+		Name:  u.Name,
+		Email: u.Email,
+	}
+}
+
+// mapServiceError maps a service-layer error to the appropriate HTTP status code and message
+func mapServiceError(err error) (int, string) {
+	switch {
+	case errors.Is(err, services.ErrEmailAlreadyExists):
+		return http.StatusConflict, "Email already registered"
+	case errors.Is(err, services.ErrInvalidCredentials):
+		return http.StatusUnauthorized, "Invalid email or password"
+	case errors.Is(err, services.ErrUserNotFound):
+		return http.StatusNotFound, "User not found"
+	default:
+		return http.StatusInternalServerError, "An internal error occurred"
+	}
+}
+
+// ─── Endpoints ──────────────────────────────────────────────────────────────────
+
+// Register handles POST /api/register
+// It validates the request, delegates to AuthService, and returns the result.
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -55,56 +86,26 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// Check if email already exists
-	var existingUser models.User
-	if result := h.DB.Where("email = ?", req.Email).First(&existingUser); result.Error == nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "Email already registered"})
-		return
-	}
-
-	// Hash password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	result, err := h.service.RegisterUser(services.RegisterInput{
+		Name:     req.Name,
+		Email:    req.Email,
+		Password: req.Password,
+		Lang:     req.Lang,
+	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process password"})
-		return
-	}
-
-	user := models.User{
-		Name:         req.Name,
-		Email:        req.Email,
-		PasswordHash: string(hashedPassword),
-	}
-
-	if result := h.DB.Create(&user); result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
-		return
-	}
-
-	// Send welcome email asynchronously in user's language
-	lang := req.Lang
-	if lang == "" {
-		lang = "en"
-	}
-	SendWelcomeEmail(user.Name, user.Email, lang)
-
-	// Generate JWT
-	token, err := generateToken(user)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		status, msg := mapServiceError(err)
+		c.JSON(status, gin.H{"error": msg})
 		return
 	}
 
 	c.JSON(http.StatusCreated, AuthResponse{
-		Token: token,
-		User: UserResponse{
-			ID:    user.ID,
-			Name:  user.Name,
-			Email: user.Email,
-		},
+		Token: result.Token,
+		User:  toUserResponse(result.User),
 	})
 }
 
-// Login authenticates a user and returns a JWT
+// Login handles POST /api/login
+// It validates the request, delegates to AuthService, and returns the result.
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -112,60 +113,29 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	var user models.User
-	if result := h.DB.Where("email = ?", req.Email).First(&user); result.Error != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
-		return
-	}
-
-	// Compare password
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
-		return
-	}
-
-	// Generate JWT
-	token, err := generateToken(user)
+	result, err := h.service.LoginUser(req.Email, req.Password)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		status, msg := mapServiceError(err)
+		c.JSON(status, gin.H{"error": msg})
 		return
 	}
 
 	c.JSON(http.StatusOK, AuthResponse{
-		Token: token,
-		User: UserResponse{
-			ID:    user.ID,
-			Name:  user.Name,
-			Email: user.Email,
-		},
+		Token: result.Token,
+		User:  toUserResponse(result.User),
 	})
 }
 
-// GetProfile returns the authenticated user's profile
+// GetProfile handles GET /api/profile
+// Returns the authenticated user's profile.
 func (h *AuthHandler) GetProfile(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 
 	var user models.User
-	if result := h.DB.First(&user, userID); result.Error != nil {
+	if result := h.service.DB().First(&user, userID); result.Error != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
 
-	c.JSON(http.StatusOK, UserResponse{
-		ID:    user.ID,
-		Name:  user.Name,
-		Email: user.Email,
-	})
-}
-
-func generateToken(user models.User) (string, error) {
-	claims := jwt.MapClaims{
-		"user_id": user.ID,
-		"email":   user.Email,
-		"exp":     time.Now().Add(24 * time.Hour).Unix(),
-		"iat":     time.Now().Unix(),
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(middleware.JWTSecret)
+	c.JSON(http.StatusOK, toUserResponse(user))
 }
